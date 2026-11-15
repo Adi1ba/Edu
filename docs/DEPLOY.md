@@ -28,12 +28,13 @@ Do not add the Supabase service-role/secret key to Vercel frontend environment v
    - `supabase/migrations/002_role_permissions.sql`
    - `supabase/migrations/003_educare_scope.sql`
    - `supabase/migrations/004_attendance_risk_rules.sql`
+   - `supabase/migrations/005_teacher_intervention_permissions.sql`
 3. In Authentication → URL Configuration:
    - Set Site URL to your deployed Vercel URL.
    - Add the Vercel URL to Redirect URLs.
 4. In Authentication → Providers → Email, decide whether email confirmation is required. If enabled, users must verify their email before signing in.
 
-If migrations 001–003 were already run on this Supabase project, do not rerun them; run only the migrations that have not yet been applied.
+If earlier migrations were already run on this Supabase project, do not rerun them; run only the migrations that have not yet been applied. In particular, apply migration 005 if you want assigned teachers to create and update intervention plans.
 
 ## 3. Create the first administrator
 
