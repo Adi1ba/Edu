@@ -8,8 +8,43 @@ type Student={id:string;full_name:string;roll_number:string;class_level:string;s
 const menu=[['overview','Overview',LayoutDashboard],['students','Students',Users],['academics','Academics',BookOpen],['attendance','Attendance',CalendarCheck],['risk','Risk monitoring',Activity]] as const;
 export default function App(){
  const [session,setSession]=useState<any>(null),[profile,setProfile]=useState<Profile|null>(null),[loading,setLoading]=useState(true),[page,setPage]=useState('overview'),[students,setStudents]=useState<Student[]>([]),[error,setError]=useState(''),[mode,setMode]=useState<'login'|'signup'>('login'),[showAdd,setShowAdd]=useState(false),[query,setQuery]=useState('');
- useEffect(()=>{if(!supabase){setLoading(false);return}supabase.auth.getSession().then(({data})=>setSession(data.session));const {data:{subscription}}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>subscription.unsubscribe()},[]);
- useEffect(()=>{if(!session||!supabase)return;supabase.from('profiles').select('id,full_name,role,account_status').eq('id',session.user.id).maybeSingle().then(({data,error})=>{if(error)setError(error.message);setProfile(data as Profile|null);setLoading(false)})},[session]);
+ useEffect(()=>{
+  if(!supabase){setLoading(false);return}
+  let mounted=true;
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{
+   if(!mounted)return;
+   setSession(nextSession);
+   if(!nextSession){setProfile(null);setLoading(false)}
+  });
+  supabase.auth.getSession().then(({data,error})=>{
+   if(!mounted)return;
+   if(error)setError(error.message);
+   setSession(data.session);
+   if(!data.session)setLoading(false);
+  }).catch((err:unknown)=>{
+   if(!mounted)return;
+   setError(err instanceof Error?err.message:'Unable to check your sign-in session.');
+   setLoading(false);
+  });
+  return()=>{mounted=false;subscription.unsubscribe()};
+ },[]);
+ useEffect(()=>{
+  if(!supabase)return;
+  if(!session){setProfile(null);setLoading(false);return}
+  let active=true;
+  setLoading(true);
+  supabase.from('profiles').select('id,full_name,role,account_status').eq('id',session.user.id).maybeSingle().then(({data,error})=>{
+   if(!active)return;
+   if(error)setError(error.message);
+   setProfile(data as Profile|null);
+   setLoading(false);
+  }).catch((err:unknown)=>{
+   if(!active)return;
+   setError(err instanceof Error?err.message:'Unable to load your school profile.');
+   setLoading(false);
+  });
+  return()=>{active=false};
+ },[session]);
  async function loadStudents(){if(!supabase||!profile)return;let q=supabase.from('students').select('id,full_name,roll_number,class_level,section,academic_year').order('class_level').order('roll_number');if(profile.role==='student')q=q.eq('profile_id',profile.id);const {data,error}=await q;if(error)setError(error.message);else setStudents((data||[]) as Student[])}
  useEffect(()=>{loadStudents()},[profile]);
  async function auth(e:FormEvent<HTMLFormElement>){e.preventDefault();setError('');const f=new FormData(e.currentTarget);if(!supabase)return;const email=String(f.get('email')),password=String(f.get('password'));if(mode==='login'){const {error}=await supabase.auth.signInWithPassword({email,password});if(error)setError(error.message)}else{const {error}=await supabase.auth.signUp({email,password,options:{data:{full_name:String(f.get('name'))}}});if(error)setError(error.message);else setError('Account created. Check your email if confirmation is enabled. Your account will need school approval.')}}
