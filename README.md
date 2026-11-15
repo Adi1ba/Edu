@@ -41,7 +41,7 @@ npm run preview
 ## Deployment
 See [docs/DEPLOY.md](docs/DEPLOY.md) for Vercel and Supabase deployment instructions.
 
-## Risk screening rules
+## Database migrations\n\nApply the SQL files in `supabase/migrations/` in filename order. Migration `005_teacher_intervention_permissions.sql` allows assigned teachers to create and update intervention records while only Admin and Advisor can delete them.\n\n## Risk screening rules
 - Low: attendance >= 90%
 - Medium: attendance >= 75% and < 90%
 - High: attendance < 75%
