@@ -166,8 +166,8 @@ drop policy if exists records_read on public.academic_records;
 create policy records_read on public.academic_records for select to authenticated using(public.is_approved() and public.can_access_student(student_id));
 drop policy if exists records_staff_write on public.academic_records;
 create policy records_staff_write on public.academic_records for all to authenticated
-using(public.is_approved() and public.current_user_role() in ('admin','teacher'))
-with check(public.is_approved() and public.current_user_role() in ('admin','teacher'));
+using(public.is_approved() and public.current_user_role() in ('admin','teacher') and public.can_access_student(student_id))
+with check(public.is_approved() and public.current_user_role() in ('admin','teacher') and public.can_access_student(student_id));
 
 drop policy if exists attendance_read on public.attendance;
 create policy attendance_read on public.attendance for select to authenticated using(public.is_approved() and public.can_access_student(student_id));
